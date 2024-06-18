@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>HTTP request for Emscripten</title>
+    <script type="text/javascript" src="main.js"></script>
+</head>
+<body>
+<h2>HTTP Request from inside WASM using emscripten_fetch() and callbacks</h2>
+
+<p>This example uses
+    <code><a href="https://emscripten.org/docs/api_reference/fetch.html">emscripten_fetch()</a></code>
+     with <code>onsuccess</code> and <code>onerror</code> callbacks.</p>
+<p>See the output in browser developer console.</p>
+
+<p>Actual code:</p>
+<pre>
+
+void requestOnSuccess(emscripten_fetch_t *fetch)
+{
+    char dat[fetch->numBytes + 1];
+    memcpy(dat, fetch->data, fetch->numBytes);
+    dat[fetch->numBytes] = '\0';
+    printf("data: %s \n", dat);
+    emscripten_fetch_close(fetch);
+}
+
+void requestOnError(emscripten_fetch_t *fetch)
+{
+    printf("HTTP failure status code: %d.\n", fetch->status);
+    emscripten_fetch_close(fetch);
+}
+
+emscripten_fetch_attr_t attr;
+emscripten_fetch_attr_init(&attr);
+strcpy(attr.requestMethod, "GET");
+attr.attributes = EMSCRIPTEN_FETCH_LOAD_TO_MEMORY;
+attr.onsuccess = requestOnSuccess;
+attr.onerror = requestOnError;
+emscripten_fetch(&attr, "https://httpbin.org/anything");
+
+</pre>
+<section>
+    <h4>Info</h4>
+    <ul>
+        <li><a href="https://github.com/wasm-outbound-http-examples/emscripten/tree/main/browser-callbacks/">Demo source code</a></li>
+        <li>Versions used on the moment of build:<small>
+            Emscripten: <a href="https://github.com/emscripten-core/emscripten/tree/3.1.61">v3.1.61</a>.
+        </small></li>
+    </ul>
+</section>
+<footer><small>Created for (wannabe-awesome) <a href="https://github.com/vasilev/HTTP-request-from-inside-WASM">list</a></small></footer>
+</body>
+</html>
